@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: kineq-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: MONGO_DB_NAME
+        value: kineq
+      - key: password_pepper
+        sync: false
+      - key: jwt_secret_key
+        sync: false
+      - key: refresh_token_pepper
+        sync: false
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PORT
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: Resend_api_token
+        sync: false
+      - key: client_url
+        sync: false
