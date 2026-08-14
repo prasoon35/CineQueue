@@ -21,7 +21,6 @@ CineQueue exists to keep a user's watch history, current progress, and future pi
 
 - It gives a single workflow for tracking watchlist, ongoing, and completed items.
 - It makes sharing curated lists and folders simple with unique public links.
-- It reduces forgotten shows and movies by using reminder emails and web-push notifications.
 - It helps users discover what to watch next with chatbot-based search and recommendations.
 - It keeps the experience fast with Redis-backed reads and clean data updates in MongoDB.
 
@@ -68,7 +67,7 @@ flowchart LR
 		BFF --> CHAT[Chatbot / Tavily]
 		BFF --> SHARED[Public share routes]
 		CRON[Cron jobs] --> NOTIF[Email + web push reminders]
-		NOTIF --> MAIL
+		NOTIF --> MAIL[Email service]
 	end
 ```
 
@@ -76,7 +75,6 @@ Backend behavior in plain terms:
 
 - GET requests for watchlist, ongoing, completed, and shared views check Redis first, then fall back to MongoDB on cache miss.
 - POST, PATCH, DELETE, and move actions write to MongoDB first and then clear the relevant Redis keys so the next GET rebuilds the cache.
-- OTP verification uses Redis as a short-lived store for `otp:<email>` and deletes the key after successful verification or expiry.
 - Login and signup issue JWT access tokens plus an HTTP-only refresh cookie.
 - Chatbot requests go through the backend and use Tavily, while reminder jobs run from cron and trigger mail / web-push notifications.
 
