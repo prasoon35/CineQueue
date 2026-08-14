@@ -11,8 +11,7 @@ CineQueue is a full-stack web application with LLM-powered semantic search (via 
 - watchlist
 - ongoing
 - completed (folder-based)
-- link sharing (share folders/lists via unique public links)
-- scheduled automated reminder in form of emails and web-push notifications
+- scheduled automated email reminders
 - chatbot (for searching about movies/series/animes information, getting recommendations, etc)
 
 ## Why CineQueue
@@ -20,7 +19,7 @@ CineQueue is a full-stack web application with LLM-powered semantic search (via 
 CineQueue exists to keep a user's watch history, current progress, and future picks in one place instead of spreading them across notes, bookmarks, and streaming apps.
 
 - It gives a single workflow for tracking watchlist, ongoing, and completed items.
-- It makes sharing curated lists and folders simple with unique public links.
+- It reduces forgotten shows and movies by using reminder emails.
 - It helps users discover what to watch next with chatbot-based search and recommendations.
 - It keeps the experience fast with Redis-backed reads and clean data updates in MongoDB.
 
@@ -36,18 +35,12 @@ flowchart LR
 	subgraph Auth Flow
 		BFF --> SIGNUP[POST /api/user/signup]
 		BFF --> LOGIN[POST /api/user/login]
-		BFF --> OTPSEND[POST /api/user/sendOtp]
-		BFF --> OTPVERIFY[POST /api/user/verifyEmail]
 		SIGNUP --> JWT[Access token + refresh cookie]
 		LOGIN --> JWT
-		OTPSEND --> REDISOTP[(Redis OTP cache, TTL 120s)]
-		OTPSEND --> MAIL[Email service]
-		OTPVERIFY --> REDISOTP
-		OTPVERIFY --> OTPDONE[Verify OTP and delete key]
 	end
 
 	subgraph Read Flow
-		BFF --> GETS[GET watchlist / ongoing / completed / shared]
+		BFF --> GETS[GET watchlist / ongoing / completed]
 		GETS --> CACHEHIT{Redis hit?}
 		CACHEHIT -->|Yes| REDISCACHE[(Redis cache)]
 		REDISCACHE --> RESP[Return cached JSON]
@@ -65,18 +58,17 @@ flowchart LR
 
 	subgraph Other Services
 		BFF --> CHAT[Chatbot / Tavily]
-		BFF --> SHARED[Public share routes]
-		CRON[Cron jobs] --> NOTIF[Email + web push reminders]
+		CRON[Cron jobs] --> NOTIF[Email reminders]
 		NOTIF --> MAIL[Email service]
 	end
 ```
 
 Backend behavior in plain terms:
 
-- GET requests for watchlist, ongoing, completed, and shared views check Redis first, then fall back to MongoDB on cache miss.
+- GET requests for watchlist, ongoing, and completed views check Redis first, then fall back to MongoDB on cache miss.
 - POST, PATCH, DELETE, and move actions write to MongoDB first and then clear the relevant Redis keys so the next GET rebuilds the cache.
 - Login and signup issue JWT access tokens plus an HTTP-only refresh cookie.
-- Chatbot requests go through the backend and use Tavily, while reminder jobs run from cron and trigger mail / web-push notifications.
+- Chatbot requests go through the backend and use Tavily, while reminder jobs run from cron and trigger email notifications.
 
 The project is split into:
 
